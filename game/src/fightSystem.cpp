@@ -1,9 +1,9 @@
 #include "../header/fightSystem.hpp"
 #include "../header/enemy.hpp"
+#include "../header/player.hpp"
+#include "../header/helperFunctions.hpp"
 
-#include <random>
 #include <stdexcept>
-#include <time.h>
 
 using std::cin;
 using std::cout;
@@ -11,39 +11,13 @@ using std::endl;
 using std::runtime_error;
 using std::string;
 
-
-void fightSystem::fighting(Enemy enemy, Player& player) {
-    fightDisplay(enemy, player);
-
-    while(true) {
-        playerTurn(const Enemy& enemy, Player& player);
-        if(enemy.getHP() <= 0) {
-            break;
-        }
-        
-        cout << "UPDATE FIGHT DISPLAY" << endl;
-
-        enemyTurn(const Enemy& enemy, Player& player);
-        if(player.getHP() <= 0) {
-            break;
-        }
-
-        cout << "UPDATE FIGHT DISPLAY" << endl;
-    }
-
-    //DISPLAY WINNER OR LOSER SCREEN
-
-    if (enemy.getHP() == 0) {
-        cout << "Congratulations you beat the enemy!" << endl;
-    }
-    else {
-        cout << "You have died" << endl;
-        // quit? 
-    }
+FightSystem::FightSystem() {
+    GAME_SCREEN_SIZE = 80;
+    Skip_Turn_Flag = false;
+    Mage_Charge_Stacks = 1;
 }
 
-void fightSystem::fightDisplay(Enemy& enemy, Player& player) {
-    int GAME_SCREEN_SIZE = 80;
+void FightSystem::fightDisplay(Enemy& enemy, Player& player) { 
     string playerSide, enemySide, playerHPSide, enemyHPSide;
 
     string playerTitle = player.getName() + " the " + player.getPlayerClass();
@@ -99,6 +73,9 @@ void fightSystem::fightDisplay(Enemy& enemy, Player& player) {
         enemyHPSide += " ";
     }
 
+    //Clear screen
+    helperPrintLargerSpacer();
+
     //Print name line and HP line
     cout << playerSide << enemySide << endl;
     cout << playerHPSide << enemyHPSide << endl << endl;
@@ -111,93 +88,132 @@ void fightSystem::fightDisplay(Enemy& enemy, Player& player) {
     cout << endl;
 }
 
-
-void fightSystem::playerTurn(Enemy& enemy, Player& player) { //Missing funcitonality for move2 (snipe) turn skip
-    int moveChoice;
-
-    cout << "Your Moves:" << endl;
-    cout << "1. " << player.getMove1Name() << " - (" << player.getATK() << ")" << endl;
-    cout << "2. " << player.getMove2Name() << " - (" << player.getATK()*3 << ", Skip Next Turn)" << endl;
-
-    if (!(cin >> moveChoice)) { //check if moveChoice is either 1 or 2 b/c player is stupid
-        throw runtime_error("fightSystem playerTurn cin_read_error");
+void FightSystem::playerTurn(Enemy& enemy, Player& player) {
+    if(Skip_Turn_Flag == true) {
+        Skip_Turn_Flag = false;
+        fightDisplay(enemy, player);
+        cout << "You skip your turn." << endl;
+        helperWait(2.5);
+        return;
     }
 
-    if(moveChoice == 1) {
-        enemy.setHP(enemy.getHP()-player.getATK());
-    } else if(moveChoice == 2) {
-        enemy.setHP(enemy.getHP()-(player.getATK()*3));
+    int moveChoice = 0;
+
+    while(!(moveChoice == 1 || moveChoice == 2)) {
+        fightDisplay(enemy, player);
+
+        if(player.getPlayerClass() == "Archer") {
+            cout << "Your Moves:" << endl;
+            cout << "1. " << player.getMove1Name() << " - (" << player.getATK() << ")" << endl;
+            cout << "2. " << player.getMove2Name() << " - (" << int(player.getATK()*1.5) << "-" << int(player.getATK()*2.5) << ", Skip Next Turn)" << endl;
+        } else if(player.getPlayerClass() == "Swordsman") {
+            cout << "Your Moves:" << endl;
+            cout << "1. " << player.getMove1Name() << " - (" << player.getATK() << ")" << endl;
+            cout << "2. " << player.getMove2Name() << " - (" << int(player.getATK()*1.5) << ", Lose 4 HP)" << endl;
+        } else if(player.getPlayerClass() == "Mage") {
+            cout << "Your Moves:" << endl;
+            cout << "1. " << player.getMove1Name() << " - (" << player.getATK()*Mage_Charge_Stacks << ")" << endl;
+            cout << "2. " << player.getMove2Name() << " - (" << "0, Empower Next Attack)" << endl;
+        }
+
+        if (!(cin >> moveChoice)) {
+            throw runtime_error("fightSystem playerTurn cin_read_error");
+        }
+
+        if(!(moveChoice == 1 || moveChoice == 2)) {
+            fightDisplay(enemy, player);
+            cout << "Invalid, please enter a proper move number..." << endl;
+            helperWait(2);
+        }
     }
 
-    //output weapon options
-    //output stats
-    //damage enemy
-    //output damage to enemy
+    if(player.getPlayerClass() == "Archer") {
+        int damageDone = player.getATK();
+        if(moveChoice == 1) {
+            enemy.setHP(enemy.getHP()-damageDone);
+            fightDisplay(enemy, player);
+            cout << "You did " << damageDone << " DMG with " << player.getMove1Name() << endl;
+            
+        } else if(moveChoice == 2) {
+            damageDone *= (1.5 + (helperGenerateRandomInteger(0,10)/10.0));
+            enemy.setHP(enemy.getHP()-damageDone);
+            fightDisplay(enemy, player);
+            cout << "You did " << damageDone << " DMG! You will skip your next turn."  << endl;
+            Skip_Turn_Flag = true;
+        }
+    } else if(player.getPlayerClass() == "Swordsman") {
+        int damageDone = player.getATK();
+        if(moveChoice == 1) {
+            enemy.setHP(enemy.getHP()-damageDone);
+            fightDisplay(enemy, player);
+            cout << "You did " << damageDone << " DMG with " << player.getMove1Name() << endl;
+            
+        } else if(moveChoice == 2) {
+            damageDone *= 1.5;
+            enemy.setHP(enemy.getHP()-damageDone);
+            player.setHP(player.getHP()-4);
+            fightDisplay(enemy, player);
+            cout << "You did " << damageDone << " DMG! But lost 4 HP" << endl;
+        }
+    } else if(player.getPlayerClass() == "Mage") {
+        int damageDone = player.getATK()*Mage_Charge_Stacks;
+        if(moveChoice == 1) {
+            enemy.setHP(enemy.getHP()-damageDone);
+            fightDisplay(enemy, player);
+            cout << "You did " << damageDone << " DMG with " << player.getMove1Name() << endl; 
+            Mage_Charge_Stacks = 1; 
+        } else if(moveChoice == 2) {
+            Mage_Charge_Stacks *= 2;
+            fightDisplay(enemy, player);
+            cout << "Your next attack is strengthened by " << Mage_Charge_Stacks << "x!" << endl;
+        }
+    }
+    helperWait(2.5);
 }
 
-void fightSystem::enemyTurn(Enemy& enemy, Player& player) {
-    
-    player.setHP(player.getHP()-enemy.getATK());
+void FightSystem::enemyTurn(Enemy& enemy, Player& player) {
+    int chanceNum = helperGenerateRandomInteger(0, 99);
+    int damageDone = enemy.getATK();
 
-    cout << "UPDATE FIGHT DISPLAY" << endl;
+    if (chanceNum >= 0 && chanceNum < 70) {
+        player.setHP(player.getHP() - damageDone);
+        fightDisplay(enemy, player);
+        cout << enemy.getName() << " used " << enemy.getMove1Name() << "."; 
+        cout << " You took "<< damageDone << " damage!" << endl;
 
-    cout << "The ENEMYNAME dealt X damage to you!" << endl;
-
-
-
-    // cout << "The "<< /*[enemy name] << */" takes damage! " << endl;
-    //use the change function and change HP by a player's ATK * -1
-    //int damage = player.getAtk() * -1;
-    //enemy.changeHP(damage);
-    //
-    //maybe print out how much damage done?
-    // cout << "The "<< /*[enemy name] << */ "strikes back! " << endl;
-    //int damage2 = enemy.getAtk
-    //decrease hp of player and enemy
-    //include enemy class?
-    //getAtk to inflict damage upon player
-
-    //decrease distance? only during fight end
-    //
-
+    } else {
+        damageDone *= 1.3;
+        player.setHP(player.getHP() - damageDone);
+        fightDisplay(enemy, player);
+        cout << enemy.getName() << " used " << enemy.getMove2Name() << ".";
+        cout << " You took "<< damageDone << " damage!" << endl;
+    }
+    helperWait(2.5);
 }
 
-// void createEnemy(int x) {
-//     Enemy newEnemy;
+bool FightSystem::fighting(Enemy enemy, Player& player) {
+    while(true) {
+        playerTurn(enemy, player);
+        if(enemy.getHP() <= 0) {
+            break;
+        }
 
-//     if (x <= 50 && x >= 40) {
-//         newEnemy.setName("Sphinx");
-//         newEnemy.setATK(2);
-//         newEnemy.setHP(20);
-//     }
+        enemyTurn(enemy, player);
+        if(player.getHP() <= 0) {
+            break;
+        }
+    }
 
-//     if (x < 40 && x >= 30) {
-//         newEnemy.setName("Cyclops");
-//         newEnemy.setATK(4);
-//         newEnemy.setHP(30);
-//     }
-
-//     if (x < 30 && x >= 20) {
-//         newEnemy.setName("Chimera");
-//         newEnemy.setATK(6);
-//         newEnemy.setHP(40);
-//     }
-
-//     if (x < 20 && x >= 10) {
-//         newEnemy.setName("Sphinx");
-//         newEnemy.setATK(8);
-//         newEnemy.setHP(50);
-//     }
-
-//     if (x = 10 && x > 0) {
-//         newEnemy.setName("Medusa");
-//         newEnemy.setATK(10);
-//         newEnemy.setHP(80);
-//     }
-
-//     if (x == 0) {
-//         newEnemy.setName("Typhon");
-//         newEnemy.setATK(15);
-//         newEnemy.setHP(100);
-//     }
-// }
+    fightDisplay(enemy, player);
+    if(player.getHP() <= 0) {
+        cout << "You were defeated by " << enemy.getName() << "..." << endl;
+        helperWait(2.5);
+        helperPrintLargerSpacer();
+        return false;
+    } else {
+        cout << "You have slain " << enemy.getName() << "!" << endl;
+        helperWait(2.5);
+        helperPrintLargerSpacer();
+        return true;
+    }
+}
