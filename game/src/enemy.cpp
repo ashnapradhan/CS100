@@ -5,18 +5,13 @@
 
 using namespace std;
 
-Enemy::Enemy() {
-    this->name = "";
-    this->hp = 0;
-    this->atk = 0;
-    this->difficulty = 0;
-}
-
-Enemy::Enemy(const string& name, int hp, int atk, int difficulty) {
+Enemy::Enemy(const string& name, const string& move1Name, const string& move2Name, int hp, int atk) {
     this->name = name;
     this->hp = hp;
+    this->maxHP = hp;
     this->atk = atk;
-    this->difficulty = difficulty;
+    this->move1Name = move1Name;
+    this->move2Name = move2Name;
 }
 
 const string& Enemy::getName() const {
@@ -25,32 +20,22 @@ const string& Enemy::getName() const {
 
 int Enemy::getHP() {
     return hp;
-
 }
-
 
 int Enemy::getATK() {
     return atk;
-
 }
 
 int Enemy::getMaxHP() {
-    return hp;
-
-}
-
-int Enemy::getDifficulty() {
-    return difficulty;
+    return maxHP;
 }
 
 void Enemy::setHP(int newHP) {
     hp = newHP;
-    
 }
 
 void Enemy::setATK(int newATK) {
     atk = newATK;
-
 }
 
 void Enemy::setName(string newName) {
@@ -58,25 +43,9 @@ void Enemy::setName(string newName) {
 }
 
 const string& Enemy::getMove1Name() {
-    return defaultMove1Name;
-   
+    return move1Name;
 }
 
 const string& Enemy::getMove2Name() {
-    return defaultMove2Name;
-  
+    return move2Name;
 }
-
-
-
-
-
- /*
-
-void Enemy::getEnemyArt() {
-
-}
-*/
-
-
-
