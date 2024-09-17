@@ -1,6 +1,6 @@
 
 # A Text-Based Role-Playing Game (RPG) 
- > Authors: \<[Jake Wang]\> \<[Ashna Pradhan](https://github.com/ashnapradhan)\> \<[Chau Nguyen-Ho]\> \<[Joseph de Leon]\>
+ > Authors: \<Jake Wang\> \<[Ashna Pradhan](https://github.com/ashnapradhan)\> \<Chau Nguyen-Ho\> \<Joseph de Leon\>
 
 ## Project Description
  > This game allows users to choose among different playable character classes to play: such as a Swordsman, a Mage, and an Archer. Each of these playable character classes come packaged with different playstyles and weapons. Along with weapons, the player collects armor along their journey and they become stronger by equipping better armor and weapons througout the game. After selecting a character, the player is prompted with a narrative during each encounter, to proceed with their story, they must make one of two choices based upon the prompt. This will lead to a variety of events, such as combat, equipment upgrades, or heals. This repeats until the player reaches the Demon King's castle or die trying. 
